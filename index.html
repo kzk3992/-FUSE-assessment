@@ -283,8 +283,20 @@ function buildResult(v, ori, fixed) {
 
 function finish() { RESULT = compute(answers); renderResult(); show("scr-result"); }
 
+// 素材の解決順: 埋め込み（assets.js の data URI）→ 実ファイル（production/ から配置した assets/）→ 代替表示
+const LIN_CODE = { "時間系": "TM", "空間系": "SP", "物質系": "MT", "身体系": "BD", "精神系": "MN", "感情系": "EM", "情報系": "IN", "確率系": "PR" };
 const BG_MAP = { "時間系|hero": "BG_TIME_HERO", "時間系|villain": "BG_TIME_VILLAIN", "感情系|hero": "BG_EMOTION_HERO" };
 const LOGO_MAP = { "未来残響": "LOGO_MIRAI", "時間加速": "LOGO_JIKAN", "温度共有": "LOGO_ONDO" };
+function bgSrc(R) {
+  const key = BG_MAP[R.lineage + "|" + R.side];
+  if (key && window.ASSETS && ASSETS[key]) return ASSETS[key];
+  return "assets/backgrounds/" + LIN_CODE[R.lineage] + "_" + (R.side === "hero" ? "HERO" : "VILLAIN") + ".webp";
+}
+function logoSrc(R) {
+  const key = LOGO_MAP[R.core.name];
+  if (key && window.ASSETS && ASSETS[key]) return ASSETS[key];
+  return "assets/logos/" + LIN_CODE[R.lineage] + "_" + FORM_CODES[R.form] + ".webp";
+}
 
 function setFlood(id, color) { const el = document.getElementById(id); if (el) el.setAttribute("flood-color", color); }
 
@@ -293,11 +305,11 @@ function renderResult() {
   document.getElementById("fileNo").textContent = R.code;
   document.getElementById("faction").textContent = (R.side === "hero" ? "ヒーロー" : "ヴィラン") + " ― " + R.lineage + "（" + R.alignLabel + "）";
   document.getElementById("faction").style.color = R.side === "hero" ? "#fde047" : "#d8b4fe";
-  // 背景
-  const bgKey = BG_MAP[R.lineage + "|" + R.side];
+  // 背景（実ファイルが無い場合は onerror でグラデーションに落とす）
   const bgImg = document.getElementById("cardBg"), grad = document.getElementById("cardBgGrad");
-  if (bgKey && window.ASSETS && ASSETS[bgKey]) { bgImg.src = ASSETS[bgKey]; bgImg.style.display = "block"; grad.style.background = "transparent"; }
-  else { bgImg.style.display = "none"; grad.style.background = "linear-gradient(160deg, " + L.color + "33, #0d1120 55%, " + L.fx + "26)"; }
+  bgImg.style.display = "block"; grad.style.background = "transparent";
+  bgImg.onerror = () => { bgImg.style.display = "none"; grad.style.background = "linear-gradient(160deg, " + L.color + "33, #0d1120 55%, " + L.fx + "26)"; };
+  bgImg.src = bgSrc(R);
   // 代償タグ
   const tag = document.getElementById("costTag");
   tag.textContent = COSTS[R.lowest].tag;
@@ -305,9 +317,18 @@ function renderResult() {
   // ロゴ
   setFlood("fFXflood", L.fx); setFlood("fFXLflood", L.fx); setFlood("fLinflood", L.color);
   const wrap = document.getElementById("logoWrap"); wrap.innerHTML = "";
-  const logoKey = LOGO_MAP[R.core.name];
-  if (logoKey && window.ASSETS && ASSETS[logoKey]) {
-    const mk = cls => { const i = document.createElement("img"); i.src = ASSETS[logoKey]; i.className = "layer " + cls; i.alt = ""; return i; };
+  const lsrc = logoSrc(R);
+  const probe = new Image();
+  probe.onerror = () => {  // ロゴ素材が無い能力はテキストロゴで代替
+    wrap.innerHTML = "";
+    const d = document.createElement("div"); d.className = "textlogo";
+    d.innerHTML = '<div class="kana">' + R.core.name_kana + '</div>' +
+      '<div class="kanji" style="background:linear-gradient(180deg,#fff,' + L.color + ');-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 3px 0 rgba(5,8,20,.9)) drop-shadow(0 0 14px ' + L.fx + '88)">' + R.core.name + '</div>';
+    wrap.appendChild(d);
+  };
+  probe.src = lsrc;
+  {
+    const mk = cls => { const i = document.createElement("img"); i.src = lsrc; i.className = "layer " + cls; i.alt = ""; return i; };
     if (R.awakening === "双極型") {           // 初版方式＋カタカナ段の落とし影（v5確定仕様）
       wrap.appendChild(mk("lg-glow")); wrap.appendChild(mk("lg-dark")); wrap.appendChild(mk("lg-kage"));
       wrap.appendChild(mk("lg-fx")); wrap.appendChild(mk("lg-lin"));
@@ -319,13 +340,8 @@ function renderResult() {
     } else {                                   // 潜在型
       wrap.appendChild(mk("lg-glow")); wrap.appendChild(mk("lg-dark"));
     }
-    const base = document.createElement("img"); base.src = ASSETS[logoKey]; base.alt = R.core.name; base.style.position = "relative";
+    const base = document.createElement("img"); base.src = lsrc; base.alt = R.core.name; base.style.position = "relative";
     wrap.appendChild(base);
-  } else {
-    const d = document.createElement("div"); d.className = "textlogo";
-    d.innerHTML = '<div class="kana">' + R.core.name_kana + '</div>' +
-      '<div class="kanji" style="background:linear-gradient(180deg,#fff,' + L.color + ');-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 3px 0 rgba(5,8,20,.9)) drop-shadow(0 0 14px ' + L.fx + '88)">' + R.core.name + '</div>';
-    wrap.appendChild(d);
   }
   // チップ・効果・パネル
   document.getElementById("chips").innerHTML =
