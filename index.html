@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FUSE診断 〜あなただけの特殊能力〜</title>
+<meta name="description" content="16の場面に答えると、あなただけの特殊能力が覚醒する診断。ヒーローか、ヴィランか。">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #0b0e1a; color: #f2f4fa; font-family: "Hiragino Kaku Gothic ProN", "Noto Sans CJK JP", sans-serif; }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 20px 14px 60px; }
+  h1.logo { font-size: 42px; margin: 26px 0 2px; letter-spacing: .04em; }
+  h1.logo span { color: #22d3ee; }
+  .subtitle { font-size: 18px; opacity: .9; margin-bottom: 22px; }
+  .prologue { background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.14); border-radius: 12px; padding: 20px; line-height: 1.9; white-space: pre-line; }
+  .btn { display: inline-block; background: linear-gradient(135deg, #0891b2, #2563eb); color: #fff; border: none;
+         font-size: 19px; font-weight: 800; padding: 14px 34px; border-radius: 999px; cursor: pointer; margin-top: 22px; }
+  .btn:hover { filter: brightness(1.15); }
+  .btn.sub { background: rgba(255,255,255,.1); font-size: 15px; padding: 10px 20px; }
+  .hidden { display: none !important; }
+  .scene { color: #fbbf24; font-weight: 800; letter-spacing: .12em; font-size: 14px; margin-top: 26px; }
+  .progress { height: 6px; background: rgba(255,255,255,.12); border-radius: 3px; margin: 10px 0 20px; }
+  .progress > div { height: 100%; background: #22d3ee; border-radius: 3px; transition: width .3s; }
+  .question { font-size: 22px; font-weight: 700; line-height: 1.6; margin-bottom: 18px; }
+  .opt { display: block; width: 100%; text-align: left; background: rgba(255,255,255,.06); color: #fff;
+         border: 1.5px solid rgba(255,255,255,.22); border-radius: 12px; padding: 15px 18px; font-size: 17px;
+         margin-bottom: 11px; cursor: pointer; }
+  .opt:hover { background: rgba(34,211,238,.16); border-color: #22d3ee; }
+  /* ===== 結果カード ===== */
+  .card { position: relative; overflow: hidden; border-radius: 10px; margin: 18px auto 8px; background: #111; }
+  .card.landscape { width: min(94vw, 800px); aspect-ratio: 4 / 3; }
+  .card.portrait { width: min(92vw, 430px); aspect-ratio: 9 / 16; }
+  .card .bgimg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .card .bggrad { position: absolute; inset: 0; }
+  .card-header { position: absolute; top: 0; left: 0; right: 0; background: rgba(5,8,18,.85); color: #fff;
+                 font-weight: 700; padding: 10px 16px; font-size: clamp(12px, 2.2vw, 17px); z-index: 6; }
+  .costtag { position: absolute; top: 52px; right: 8px; transform: rotate(9deg); z-index: 7; font-weight: 800;
+             padding: 8px 13px; border-radius: 7px; border: 2px solid #1e140a; color: #1e140a; font-size: clamp(12px, 2.2vw, 16.5px); }
+  .card-main { position: absolute; inset: 0; display: flex; padding: 64px 20px 40px; gap: 10px; z-index: 5; }
+  .card.portrait .card-main { flex-direction: column; align-items: center; padding-top: 84px; }
+  .logo-zone { flex: 1.35; display: flex; flex-direction: column; }
+  .faction { font-weight: 800; font-size: clamp(15px, 3vw, 21px); text-shadow: 0 2px 7px rgba(0,0,0,.6); }
+  .logo-wrap { position: relative; width: 100%; margin-top: 12px; }
+  .logo-wrap img { width: 100%; display: block; }
+  .logo-wrap .layer { position: absolute; inset: 0; }
+  .lg-kage { filter: brightness(0) blur(2px); opacity: .55; transform: translate(4px, 5px); clip-path: inset(0 0 64% 0); }
+  .lg-glow { filter: url(#fFX) blur(9px); opacity: .75; }
+  .lg-dark { filter: url(#fDark); }
+  .lg-fx { filter: url(#fFX); clip-path: inset(0 50% 0 0); }
+  .lg-lin { filter: url(#fLin); clip-path: inset(0 0 0 50%); }
+  .lg-fxl { filter: url(#fFXL); }
+  .lg-white { filter: url(#fWhite); }
+  .rays { position: absolute; inset: -40%; background: repeating-conic-gradient(from 0deg, rgba(255,215,0,.16) 0deg 5deg, transparent 5deg 24deg);
+          -webkit-mask-image: radial-gradient(circle, #000 0%, transparent 62%); mask-image: radial-gradient(circle, #000 0%, transparent 62%); }
+  .textlogo { position: relative; text-align: center; line-height: 1.1; padding: 14px 4px 6px; }
+  .textlogo .kana { font-size: clamp(15px, 3.4vw, 24px); font-weight: 800; letter-spacing: .14em; color: #fff;
+                    text-shadow: 0 2px 8px rgba(0,0,0,.75); }
+  .textlogo .kanji { font-size: clamp(44px, 10.5vw, 84px); font-weight: 900; letter-spacing: .05em; }
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+  .chip { background: rgba(10,16,34,.9); border: 1.5px solid rgba(255,255,255,.85); border-radius: 999px;
+          padding: 6px 14px; font-size: clamp(13px, 2.4vw, 17px); font-weight: 700; }
+  .chip.main { font-size: clamp(15px, 2.8vw, 20px); padding: 8px 18px; }
+  .effect { margin-top: 14px; background: rgba(5,8,18,.62); border: 1px solid rgba(255,255,255,.25); border-radius: 11px;
+            padding: 12px 14px; font-size: clamp(14px, 2.5vw, 17.5px); font-weight: 700; line-height: 1.55; }
+  .side-zone { flex: 1; display: flex; flex-direction: column; align-items: center; }
+  .card.portrait .side-zone { width: 100%; }
+  .radar { width: min(250px, 62vw); }
+  .radar text { fill: #fff; font-size: 15px; font-weight: 700; text-anchor: middle; dominant-baseline: middle;
+                paint-order: stroke; stroke: rgba(0,0,0,.55); stroke-width: 3; }
+  .panel { margin-top: 8px; width: 100%; background: rgba(5,8,18,.7); border: 1px solid rgba(255,255,255,.28);
+           border-radius: 11px; padding: 12px 14px; font-size: clamp(13.5px, 2.4vw, 16.5px); line-height: 1.75; }
+  .card-footer { position: absolute; bottom: 7px; left: 0; right: 0; text-align: center; font-size: 12px; opacity: .92; z-index: 6;
+                 text-shadow: 0 1px 5px rgba(0,0,0,.8); }
+  .toolbar { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin: 14px 0 4px; }
+  .promptbox { width: 100%; min-height: 108px; background: #12172a; color: #dbe7ff; border: 1px solid rgba(255,255,255,.2);
+               border-radius: 10px; padding: 12px; font-size: 13.5px; line-height: 1.6; }
+  select { background: #12172a; color: #fff; border: 1px solid rgba(255,255,255,.3); border-radius: 8px; padding: 8px 10px; font-size: 15px; }
+  .secttl { font-size: 19px; font-weight: 800; margin: 30px 0 10px; }
+  .note { opacity: .75; font-size: 13.5px; line-height: 1.7; }
+  a { color: #7dd3fc; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <filter id="fFX" x="-30%" y="-30%" width="160%" height="160%">
+      <feMorphology in="SourceAlpha" operator="dilate" radius="4" result="d"/>
+      <feFlood id="fFXflood" flood-color="#fbbf24"/><feComposite in2="d" operator="in"/>
+    </filter>
+    <filter id="fFXL" x="-30%" y="-30%" width="160%" height="160%">
+      <feMorphology in="SourceAlpha" operator="dilate" radius="8" result="d"/>
+      <feFlood id="fFXLflood" flood-color="#fbbf24"/><feComposite in2="d" operator="in"/>
+    </filter>
+    <filter id="fLin" x="-30%" y="-30%" width="160%" height="160%">
+      <feMorphology in="SourceAlpha" operator="dilate" radius="4" result="d"/>
+      <feFlood id="fLinflood" flood-color="#22d3ee"/><feComposite in2="d" operator="in"/>
+    </filter>
+    <filter id="fDark" x="-30%" y="-30%" width="160%" height="160%">
+      <feMorphology in="SourceAlpha" operator="dilate" radius="7" result="d"/>
+      <feFlood flood-color="#0a1428"/><feComposite in2="d" operator="in"/>
+    </filter>
+    <filter id="fWhite" x="-30%" y="-30%" width="160%" height="160%">
+      <feMorphology in="SourceAlpha" operator="dilate" radius="3" result="d"/>
+      <feFlood flood-color="#ffffff"/><feComposite in2="d" operator="in"/>
+    </filter>
+  </defs>
+</svg>
+
+<div class="wrap">
+  <!-- ===== トップ＋プロローグ ===== -->
+  <section id="scr-top">
+    <h1 class="logo">FUSE<span>診断</span></h1>
+    <div class="subtitle">〜あなただけの特殊能力〜</div>
+    <div class="prologue">あなたは、ヒーロー映画の登場人物です。
+ある朝目覚めると、掌に奇妙な力が宿っていました ――
+これから起こる16の場面で、最初に体が動いた方を選んでください。
+理想のヒーロー像じゃなくていい。正解もありません。
+あなたの選択が、覚醒する能力を決めます。</div>
+    <button class="btn" onclick="startQuiz()">覚醒する</button>
+    <p class="note" style="margin-top:26px">結果は 82,944 通り。同じ能力名でも、特性・代償・陣営で「あなただけの能力」になります。<br>
+    © Mika Spark Studio ／ #FUSE診断</p>
+  </section>
+
+  <!-- ===== 質問 ===== -->
+  <section id="scr-quiz" class="hidden">
+    <div class="scene" id="sceneLabel"></div>
+    <div class="progress"><div id="progBar" style="width:0%"></div></div>
+    <div class="question" id="qText"></div>
+    <div id="optBox"></div>
+  </section>
+
+  <!-- ===== 結果 ===== -->
+  <section id="scr-result" class="hidden">
+    <div class="toolbar">
+      <button class="btn sub" onclick="setOrient('landscape')">横長 4:3</button>
+      <button class="btn sub" onclick="setOrient('portrait')">縦長 9:16（ストーリーズ用）</button>
+    </div>
+    <div id="card" class="card landscape">
+      <img class="bgimg" id="cardBg" alt="">
+      <div class="bggrad" id="cardBgGrad"></div>
+      <div class="card-header">FUSE FILE No. <span id="fileNo"></span></div>
+      <div class="costtag" id="costTag"></div>
+      <div class="card-main">
+        <div class="logo-zone">
+          <div class="faction" id="faction"></div>
+          <div class="logo-wrap" id="logoWrap"></div>
+          <div class="chips" id="chips"></div>
+          <div class="effect" id="effectText"></div>
+        </div>
+        <div class="side-zone">
+          <svg class="radar" id="radar" viewBox="0 0 300 300"></svg>
+          <div class="panel" id="panel"></div>
+        </div>
+      </div>
+      <div class="card-footer">FUSE診断 〜あなただけの特殊能力〜　fuse.mikaspark.com　© Mika Spark Studio</div>
+    </div>
+
+    <div class="toolbar">
+      <button class="btn" onclick="shareResult()">結果をシェア（URLをコピー）</button>
+      <button class="btn sub" onclick="location.href=location.pathname">もう一度診断する</button>
+    </div>
+    <p class="note" id="shareNote">シェアボタンを押すと、この結果ページのURLがコピーされます。ストーリーズに貼る時は、リンクスタンプに貼り付けてください。</p>
+
+    <div class="secttl">あなたのキャラを画像AIで描く</div>
+    <p class="note">このプロンプトを画像生成AIに貼ると、あなたの能力のキャラクタービジュアルが作れます。作ったら #FUSE診断 で投稿してね。</p>
+    <div style="margin:10px 0">
+      画風：<select id="styleSel" onchange="buildPrompts()">
+        <option>アニメ映画風</option><option>アメコミ風</option><option>ゲーム風</option>
+      </select>
+    </div>
+    <textarea class="promptbox" id="promptEn" readonly></textarea>
+    <div class="toolbar"><button class="btn sub" onclick="copyBox('promptEn')">英語プロンプトをコピー</button></div>
+    <textarea class="promptbox" id="promptJa" readonly></textarea>
+    <div class="toolbar"><button class="btn sub" onclick="copyBox('promptJa')">日本語プロンプトをコピー</button></div>
+  </section>
+</div>
+
+<script src="data.js"></script>
+<script src="cores.js"></script>
+<script src="assets.js"></script>
+<script>
+let answers = [], cur = 0, RESULT = null;
+
+function show(id) {
+  ["scr-top", "scr-quiz", "scr-result"].forEach(s => document.getElementById(s).classList.toggle("hidden", s !== id));
+  window.scrollTo(0, 0);
+}
+function startQuiz() { answers = []; cur = 0; show("scr-quiz"); renderQ(); }
+function renderQ() {
+  const q = QUESTIONS[cur];
+  document.getElementById("sceneLabel").textContent = "SCENE " + String(cur + 1).padStart(2, "0") + " ― " + q.scene;
+  document.getElementById("progBar").style.width = (cur / QUESTIONS.length * 100) + "%";
+  document.getElementById("qText").textContent = q.q;
+  const box = document.getElementById("optBox"); box.innerHTML = "";
+  q.options.forEach((op, i) => {
+    const b = document.createElement("button"); b.className = "opt"; b.textContent = op.t;
+    b.onclick = () => { answers.push(i); cur++; if (cur < QUESTIONS.length) renderQ(); else finish(); };
+    box.appendChild(b);
+  });
+}
+function zoneIdx(v) { return v <= 32 ? 0 : v <= 66 ? 1 : 2; }
+
+function compute(answers) {
+  const raw = {}, max = {};
+  PARAMS.forEach(p => { raw[p] = 0; max[p] = 0; });
+  QUESTIONS.forEach((q, qi) => {
+    q.options.forEach(op => {
+      if (op.m) max[op.m] += 6;
+      if (op.s) max[op.s] += 3;
+    });
+    const op = q.options[answers[qi]];
+    if (op.m) raw[op.m] += 6;
+    if (op.s) raw[op.s] += 3;
+  });
+  const v = {};
+  PARAMS.forEach(p => v[p] = Math.round(raw[p] / max[p] * 100));
+  let ori = 0;
+  QUESTIONS.forEach((q, qi) => { ori += (q.options[answers[qi]].o || 0); });
+  return buildResult(v, ori);
+}
+
+function buildResult(v, ori, fixed) {
+  const sorted = PARAMS.slice().sort((a, b) => v[b] - v[a]);
+  const top = sorted[0], second = sorted[1], lowest = sorted[sorted.length - 1];
+  // 陣営
+  const oriN = ori >= 0 ? Math.round(ori / 78 * 100) : Math.round(ori / 60 * 100);
+  const side = ori >= 0 ? "hero" : "villain";
+  const alignLabel = oriN >= 40 ? "ピュアヒーロー" : oriN >= 10 ? "アンチヒーロー寄り" : oriN > -10 ? "グレー" :
+                     oriN > -40 ? "アンチヴィラン寄り" : "ダークヴィラン";
+  // 系統
+  let lineage = fixed && fixed.lineage;
+  if (!lineage) {
+    // 適性は順序つき重み（1位×2.4 / 2位×1.6 / 他×0.5）。時間系と精神系は適性ペアが同じ顔ぶれのため順序で差をつける
+    let best = -1;
+    for (const [name, L] of Object.entries(LINEAGES)) {
+      let sc = 0;
+      PARAMS.forEach(p => sc += v[p] * (p === L.pair[0] ? 2.4 : p === L.pair[1] ? 1.6 : 0.5));
+      if (sc > best) { best = sc; lineage = name; }
+    }
+  }
+  // 形態
+  let form = fixed && fixed.form;
+  if (!form) {
+    // ゾーン条件（正規化後の分布に合わせて閾値は H>=60 / L<=35）→ 相対条件（上位パラメータの組み合わせ）→ 受け皿の順
+    const H = p => v[p] >= 60, Lw = p => v[p] <= 35;
+    const inTop2 = p => p === top || p === second;
+    if (H("PER") && H("DEP")) form = "予知型";
+    else if (H("DRV") && Lw("CTL")) form = "速度型";
+    else if (H("CTL") && H("DEP")) form = "改変型";
+    else if (H("RES") && H("FLX")) form = "共有型";
+    else if (Lw("FLX") && H("CTL")) form = "固定型";
+    else if (Lw("DRV") && H("DEP")) form = "蓄積型";
+    else if (Lw("DEP") && H("FLX")) form = "転移型";
+    else if (v.PER <= 25 && v.RES <= 25) form = "遮断型";
+    else if (top === "PER" && inTop2("DEP")) form = "予知型";
+    else if (top === "DRV" && v.CTL <= 40) form = "速度型";
+    else if (top === "RES" && inTop2("FLX")) form = "共有型";
+    else if (top === "CTL" && inTop2("DEP")) form = "改変型";
+    else if (top === "DEP" && inTop2("PER")) form = "予知型";
+    else form = { PER: "読解型", DRV: "増幅型", CTL: "変換型", RES: "回復型", FLX: "転移型", DEP: "読解型" }[top];
+  }
+  const core = CORES[lineage + "|" + form];
+  // 特性 上位3
+  const traits = sorted.slice(0, 3).map(p => TRAITS[p][zoneIdx(v[p])]);
+  // 覚醒タイプ
+  const a = v[top], b = v[second], mn = Math.min(...PARAMS.map(p => v[p]));
+  let awakening;
+  if (a >= 55 && b >= 55 && a - b < 15) awakening = "双極型";
+  else if (a - mn <= 25) awakening = "万能型";
+  else if (a - b >= 15) awakening = "尖型";
+  else if (PARAMS.every(p => v[p] >= 20 && v[p] <= 75)) awakening = "潜在型";
+  else awakening = (a - b >= 8) ? "尖型" : (b >= 50 ? "双極型" : "潜在型");
+  const pct = Math.max(10, Math.min(99, 10 + (a - mn)));
+  // 代償・発動条件・特記事項
+  const costGrade = v[lowest] <= 15 ? "重い" : v[lowest] <= 32 ? "中" : "軽い";
+  const trigger = TRIGGERS[top][zoneIdx(v[top])];
+  const notes = INTERACTIONS.filter(r => r.if(v)).slice(0, 2).map(r => r.text);
+  const digits = PARAMS.map(p => Math.min(9, Math.floor(v[p] / 10))).join("");
+  const code = "FUSE-" + LINEAGES[lineage].code + "/" + FORM_CODES[form] + "-" + digits;
+  return { v, ori, oriN, side, alignLabel, lineage, form, core, traits, mainTrait: traits[0],
+           awakening, pct, lowest, costGrade, trigger, notes, digits, code, top };
+}
+
+function finish() { RESULT = compute(answers); renderResult(); show("scr-result"); }
+
+const BG_MAP = { "時間系|hero": "BG_TIME_HERO", "時間系|villain": "BG_TIME_VILLAIN", "感情系|hero": "BG_EMOTION_HERO" };
+const LOGO_MAP = { "未来残響": "LOGO_MIRAI", "時間加速": "LOGO_JIKAN", "温度共有": "LOGO_ONDO" };
+
+function setFlood(id, color) { const el = document.getElementById(id); if (el) el.setAttribute("flood-color", color); }
+
+function renderResult() {
+  const R = RESULT, L = LINEAGES[R.lineage];
+  document.getElementById("fileNo").textContent = R.code;
+  document.getElementById("faction").textContent = (R.side === "hero" ? "ヒーロー" : "ヴィラン") + " ― " + R.lineage + "（" + R.alignLabel + "）";
+  document.getElementById("faction").style.color = R.side === "hero" ? "#fde047" : "#d8b4fe";
+  // 背景
+  const bgKey = BG_MAP[R.lineage + "|" + R.side];
+  const bgImg = document.getElementById("cardBg"), grad = document.getElementById("cardBgGrad");
+  if (bgKey && window.ASSETS && ASSETS[bgKey]) { bgImg.src = ASSETS[bgKey]; bgImg.style.display = "block"; grad.style.background = "transparent"; }
+  else { bgImg.style.display = "none"; grad.style.background = "linear-gradient(160deg, " + L.color + "33, #0d1120 55%, " + L.fx + "26)"; }
+  // 代償タグ
+  const tag = document.getElementById("costTag");
+  tag.textContent = COSTS[R.lowest].tag;
+  tag.style.background = R.costGrade === "重い" ? "#ef4444" : R.costGrade === "中" ? "#f97316" : "#eab308";
+  // ロゴ
+  setFlood("fFXflood", L.fx); setFlood("fFXLflood", L.fx); setFlood("fLinflood", L.color);
+  const wrap = document.getElementById("logoWrap"); wrap.innerHTML = "";
+  const logoKey = LOGO_MAP[R.core.name];
+  if (logoKey && window.ASSETS && ASSETS[logoKey]) {
+    const mk = cls => { const i = document.createElement("img"); i.src = ASSETS[logoKey]; i.className = "layer " + cls; i.alt = ""; return i; };
+    if (R.awakening === "双極型") {           // 初版方式＋カタカナ段の落とし影（v5確定仕様）
+      wrap.appendChild(mk("lg-glow")); wrap.appendChild(mk("lg-dark")); wrap.appendChild(mk("lg-kage"));
+      wrap.appendChild(mk("lg-fx")); wrap.appendChild(mk("lg-lin"));
+    } else if (R.awakening === "尖型") {
+      const rays = document.createElement("div"); rays.className = "rays"; wrap.appendChild(rays);
+      wrap.appendChild(mk("lg-glow")); wrap.appendChild(mk("lg-dark")); wrap.appendChild(mk("lg-white"));
+    } else if (R.awakening === "万能型") {
+      wrap.appendChild(mk("lg-glow")); wrap.appendChild(mk("lg-fxl")); wrap.appendChild(mk("lg-white"));
+    } else {                                   // 潜在型
+      wrap.appendChild(mk("lg-glow")); wrap.appendChild(mk("lg-dark"));
+    }
+    const base = document.createElement("img"); base.src = ASSETS[logoKey]; base.alt = R.core.name; base.style.position = "relative";
+    wrap.appendChild(base);
+  } else {
+    const d = document.createElement("div"); d.className = "textlogo";
+    d.innerHTML = '<div class="kana">' + R.core.name_kana + '</div>' +
+      '<div class="kanji" style="background:linear-gradient(180deg,#fff,' + L.color + ');-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 3px 0 rgba(5,8,20,.9)) drop-shadow(0 0 14px ' + L.fx + '88)">' + R.core.name + '</div>';
+    wrap.appendChild(d);
+  }
+  // チップ・効果・パネル
+  document.getElementById("chips").innerHTML =
+    '<span class="chip main">主特性：' + R.mainTrait + '</span>' + R.traits.slice(1).map(t => '<span class="chip">' + t + '</span>').join("");
+  const usage = R.alignLabel === "グレー" ? "使い道はまだ定まっていない。ヒーローにもヴィランにもなれる力だ。" :
+    R.side === "hero" ? "この力は、誰かを守る場面で最も強く発現する。" : "この力は、自分の目的を貫く場面で最も強く発現する。";
+  document.getElementById("effectText").textContent = R.core.effect + " " + usage;
+  document.getElementById("panel").innerHTML =
+    "発動条件：" + R.trigger + "<br>代償：" + COSTS[R.lowest].text + "（" + R.costGrade + "）<br>" +
+    "覚醒タイプ：" + R.awakening + " ／ 覚醒度 " + R.pct + "%" +
+    (R.notes.length ? "<br>特記事項：" + R.notes.join("／") : "");
+  buildRadar(R);
+  buildPrompts();
+}
+
+function buildRadar(R) {
+  const svg = document.getElementById("radar"); const cx = 150, cy = 150, Rr = 62;
+  const pt = (i, r) => { const a = (-90 + i * 60) * Math.PI / 180; return (cx + r * Math.cos(a)).toFixed(1) + "," + (cy + r * Math.sin(a)).toFixed(1); };
+  let s = "";
+  [1, 0.66, 0.33].forEach(f => { s += '<polygon points="' + PARAMS.map((_, i) => pt(i, Rr * f)).join(" ") + '" fill="none" stroke="rgba(255,255,255,.45)" stroke-width="1"/>'; });
+  s += '<polygon points="' + PARAMS.map((p, i) => pt(i, Rr * R.v[p] / 100)).join(" ") + '" fill="' + LINEAGES[R.lineage].color + '70" stroke="' + LINEAGES[R.lineage].color + '" stroke-width="2"/>';
+  PARAMS.forEach((p, i) => { const a = (-90 + i * 60) * Math.PI / 180; const x = cx + (Rr + 20) * Math.cos(a), y = cy + (Rr + 20) * Math.sin(a);
+    s += '<text x="' + x.toFixed(0) + '" y="' + y.toFixed(0) + '">' + PARAM_JA[p] + '</text>'; });
+  svg.innerHTML = s;
+}
+
+function setOrient(o) {
+  const c = document.getElementById("card");
+  c.classList.toggle("landscape", o === "landscape");
+  c.classList.toggle("portrait", o === "portrait");
+}
+
+function shareResult() {
+  const R = RESULT;
+  const url = location.origin + location.pathname + "?p=" + R.digits + "&l=" + LINEAGES[R.lineage].code +
+              "&f=" + FORM_CODES[R.form] + "&a=" + (R.side === "hero" ? "H" : "V");
+  const done = () => { document.getElementById("shareNote").textContent = "URLをコピーしました：" + url + " ／ ストーリーズではリンクスタンプに貼り付けてください。"; };
+  if (navigator.share) { navigator.share({ title: "FUSE診断", text: "私の特殊能力は「" + R.core.name + "」でした。#FUSE診断", url }).catch(() => {}); }
+  if (navigator.clipboard) navigator.clipboard.writeText(url).then(done).catch(() => {});
+}
+
+function buildPrompts() {
+  if (!RESULT) return;
+  const R = RESULT, style = document.getElementById("styleSel").value;
+  const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+  const en = [
+    (R.side === "hero" ? "An original superhero character, full body" : "An original supervillain character, full body"),
+    R.side === "hero" ? "a gold-and-white costume with clean heroic lines" : "a black-and-violet costume with sharp elegant lines",
+    PROMPT_BITS.lineage_en[R.lineage], PROMPT_BITS.form_en[R.form], PROMPT_BITS.trait_en[R.mainTrait],
+    PROMPT_BITS.cost_en[R.lowest], PROMPT_BITS.type_en[R.awakening], PROMPT_BITS.styles[style],
+    "no text, no watermark, no logo",
+  ].map(cap).join(". ");
+  const ja = "オリジナルの" + (R.side === "hero" ? "スーパーヒーロー" : "スーパーヴィラン") + "のキャラクター、全身。" +
+    R.lineage + "の能力「" + R.core.name + "（" + R.core.name_kana + "）」の使い手。" + R.core.effect +
+    " 主特性は「" + R.mainTrait + "」。画風は" + style + "。文字なし、透かしなし。";
+  document.getElementById("promptEn").value = en;
+  document.getElementById("promptJa").value = ja;
+}
+function copyBox(id) { const el = document.getElementById(id); el.select(); if (navigator.clipboard) navigator.clipboard.writeText(el.value); }
+
+// 共有URLから結果を再現
+(function () {
+  const q = new URLSearchParams(location.search);
+  if (!q.get("p")) return;
+  const digits = q.get("p").split("").map(Number);
+  const v = {}; PARAMS.forEach((p, i) => v[p] = Math.min(100, (digits[i] || 0) * 10 + 5));
+  const lin = Object.keys(LINEAGES).find(k => LINEAGES[k].code === q.get("l")) || "時間系";
+  const form = Object.keys(FORM_CODES).find(k => FORM_CODES[k] === q.get("f")) || "予知型";
+  RESULT = buildResult(v, q.get("a") === "V" ? -50 : 50, { lineage: lin, form });
+  show("scr-result"); renderResult();
+})();
+</script>
+</body>
+</html>
