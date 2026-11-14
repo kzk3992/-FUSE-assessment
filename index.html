@@ -26,50 +26,69 @@
          border: 1.5px solid rgba(255,255,255,.22); border-radius: 12px; padding: 15px 18px; font-size: 17px;
          margin-bottom: 11px; cursor: pointer; }
   .opt:hover { background: rgba(34,211,238,.16); border-color: #22d3ee; }
-  /* ===== 結果カード ===== */
-  .card { position: relative; overflow: hidden; border-radius: 10px; margin: 18px auto 8px; background: #111; }
+  /* ===== 結果カード（寸法は全てカード幅比 cqw で指定し、どの画面でも比率が崩れないようにする） ===== */
+  .card { position: relative; overflow: hidden; border-radius: 10px; margin: 18px auto 8px; background: #111; container-type: inline-size; }
   .card.landscape { width: min(94vw, 800px); aspect-ratio: 4 / 3; }
   .card.portrait { width: min(92vw, 430px); aspect-ratio: 9 / 16; }
   .card .bgimg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
   .card .bggrad { position: absolute; inset: 0; }
   .card-header { position: absolute; top: 0; left: 0; right: 0; background: rgba(5,8,18,.85); color: #fff;
-                 font-weight: 700; padding: 10px 16px; font-size: clamp(12px, 2.2vw, 17px); z-index: 6; }
-  .costtag { position: absolute; top: 52px; right: 8px; transform: rotate(9deg); z-index: 7; font-weight: 800;
-             padding: 8px 13px; border-radius: 7px; border: 2px solid #1e140a; color: #1e140a; font-size: clamp(12px, 2.2vw, 16.5px); }
-  .card-main { position: absolute; inset: 0; display: flex; padding: 64px 20px 40px; gap: 10px; z-index: 5; }
-  .card.portrait .card-main { flex-direction: column; align-items: center; padding-top: 84px; }
-  .logo-zone { flex: 1.35; display: flex; flex-direction: column; }
-  .faction { font-weight: 800; font-size: clamp(15px, 3vw, 21px); text-shadow: 0 2px 7px rgba(0,0,0,.6); }
-  .logo-wrap { position: relative; width: 100%; margin-top: 12px; }
+                 font-weight: 700; padding: 1.3cqw 3.5cqw; font-size: 2.9cqw; z-index: 6; white-space: nowrap; overflow: hidden; }
+  .costtag { position: absolute; top: 1cqw; right: 1.6cqw; transform: rotate(9deg); z-index: 8; font-weight: 800;
+             padding: 1cqw 2.2cqw; border-radius: 1.4cqw; border: 2px solid #1e140a; color: #1e140a; font-size: 2.6cqw; }
+  .card-main { position: absolute; inset: 0; display: grid; z-index: 5; }
+  .card.landscape .card-main { grid-template-columns: minmax(0,58fr) minmax(0,42fr);
+             grid-template-rows: auto 26cqw minmax(0,1fr);
+             grid-template-areas: "faction faction" "logo radar" "info panel";
+             gap: 1.1cqw 2cqw; padding: 7.6cqw 3.6cqw 4.2cqw; }
+  .card.portrait .card-main { grid-template-columns: minmax(0,52fr) minmax(0,48fr);
+             grid-template-rows: auto auto auto auto;
+             grid-template-areas: "faction faction" "logo logo" "info info" "radar panel";
+             gap: 1.8cqw 2cqw; padding: 8.4cqw 3.6cqw 5.4cqw; align-content: start; }
+  .faction { grid-area: faction; background: rgba(5,8,18,.88); border: 1px solid rgba(255,255,255,.3); border-radius: 2cqw;
+             padding: 1cqw 3cqw; font-weight: 800; font-size: 3.4cqw; letter-spacing: .04em; white-space: nowrap; overflow: hidden;
+             text-overflow: ellipsis; text-align: center; }
+  .logo-wrap { grid-area: logo; position: relative; width: 100%; align-self: center; }
+  .card.landscape .logo-wrap { width: 96%; margin-left: auto; margin-right: auto; }
+  .card.portrait .logo-wrap { width: 97%; margin-left: auto; margin-right: auto; }
   .logo-wrap img { width: 100%; display: block; }
   .logo-wrap .layer { position: absolute; inset: 0; }
   .lg-kage { filter: brightness(0) blur(2px); opacity: .55; transform: translate(4px, 5px); clip-path: inset(0 0 64% 0); }
-  .lg-glow { filter: url(#fFX) blur(9px); opacity: .75; }
+  .lg-glow { filter: url(#fFX) blur(5px); opacity: .75; }
   .lg-dark { filter: url(#fDark); }
   .lg-fx { filter: url(#fFX); clip-path: inset(0 50% 0 0); }
   .lg-lin { filter: url(#fLin); clip-path: inset(0 0 0 50%); }
-  .lg-fxl { filter: url(#fFXL); }
+  .lg-fxl { filter: url(#fFXL) blur(1px); }
   .lg-white { filter: url(#fWhite); }
   .rays { position: absolute; inset: -40%; background: repeating-conic-gradient(from 0deg, rgba(255,215,0,.16) 0deg 5deg, transparent 5deg 24deg);
           -webkit-mask-image: radial-gradient(circle, #000 0%, transparent 62%); mask-image: radial-gradient(circle, #000 0%, transparent 62%); }
-  .textlogo { position: relative; text-align: center; line-height: 1.1; padding: 14px 4px 6px; }
-  .textlogo .kana { font-size: clamp(15px, 3.4vw, 24px); font-weight: 800; letter-spacing: .14em; color: #fff;
+  .textlogo { position: relative; text-align: center; line-height: 1.1; padding: 3cqw 1cqw 1.5cqw; }
+  .textlogo .kana { font-size: 4.6cqw; font-weight: 800; letter-spacing: .14em; color: #fff;
                     text-shadow: 0 2px 8px rgba(0,0,0,.75); }
-  .textlogo .kanji { font-size: clamp(44px, 10.5vw, 84px); font-weight: 900; letter-spacing: .05em; }
-  .chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+  .textlogo .kanji { font-size: 12cqw; font-weight: 900; letter-spacing: .05em; }
+  .info-zone { grid-area: info; min-width: 0; min-height: 0; overflow: hidden; }
+  .chips { display: flex; gap: 1.4cqw; flex-wrap: wrap; }
   .chip { background: rgba(10,16,34,.9); border: 1.5px solid rgba(255,255,255,.85); border-radius: 999px;
-          padding: 6px 14px; font-size: clamp(13px, 2.4vw, 17px); font-weight: 700; }
-  .chip.main { font-size: clamp(15px, 2.8vw, 20px); padding: 8px 18px; }
-  .effect { margin-top: 14px; background: rgba(5,8,18,.62); border: 1px solid rgba(255,255,255,.25); border-radius: 11px;
-            padding: 12px 14px; font-size: clamp(14px, 2.5vw, 17.5px); font-weight: 700; line-height: 1.55; }
-  .side-zone { flex: 1; display: flex; flex-direction: column; align-items: center; }
-  .card.portrait .side-zone { width: 100%; }
-  .radar { width: min(250px, 62vw); }
-  .radar text { fill: #fff; font-size: 15px; font-weight: 700; text-anchor: middle; dominant-baseline: middle;
-                paint-order: stroke; stroke: rgba(0,0,0,.55); stroke-width: 3; }
-  .panel { margin-top: 8px; width: 100%; background: rgba(5,8,18,.7); border: 1px solid rgba(255,255,255,.28);
-           border-radius: 11px; padding: 12px 14px; font-size: clamp(13.5px, 2.4vw, 16.5px); line-height: 1.75; }
-  .card-footer { position: absolute; bottom: 7px; left: 0; right: 0; text-align: center; font-size: 12px; opacity: .92; z-index: 6;
+          padding: 1cqw 2.4cqw; font-size: 3cqw; font-weight: 700; white-space: nowrap; }
+  .chip.main { font-size: 3.4cqw; padding: 1.2cqw 2.8cqw; }
+  .card.landscape .chip { font-size: 2.6cqw; padding: .8cqw 2cqw; }
+  .card.landscape .chip.main { font-size: 2.9cqw; padding: .9cqw 2.4cqw; }
+  .effect { margin-top: 1.4cqw; background: rgba(5,8,18,.62); border: 1px solid rgba(255,255,255,.25); border-radius: 2.2cqw;
+            font-weight: 700; }
+  .card.landscape .effect { padding: 1.6cqw 2.2cqw; font-size: 2.45cqw; line-height: 1.45; }
+  .card.portrait .effect { padding: 2cqw 2.6cqw; font-size: 3.1cqw; line-height: 1.5; }
+  .radar { grid-area: radar; justify-self: center; align-self: center;
+           background: radial-gradient(circle, rgba(5,8,18,.55) 58%, rgba(5,8,18,0) 72%); border-radius: 50%; }
+  .card.landscape .radar { width: 26cqw; }
+  .card.portrait .radar { width: 45cqw; }
+  .radar text { fill: #fff; font-size: 25px; font-weight: 700; text-anchor: middle; dominant-baseline: middle;
+                paint-order: stroke; stroke: rgba(0,0,0,.6); stroke-width: 4; }
+  .panel { grid-area: panel; width: 100%; min-height: 0; overflow: hidden; align-self: start;
+           background: rgba(5,8,18,.7); border: 1px solid rgba(255,255,255,.28); border-radius: 2.2cqw; }
+  .card.landscape .panel { padding: 1.6cqw 2.2cqw; font-size: 2.2cqw; line-height: 1.45; }
+  .card.portrait .panel { padding: 2cqw 2.4cqw; font-size: 3cqw; line-height: 1.5; align-self: center; }
+  .card-footer { position: absolute; bottom: 0; left: 0; right: 0; text-align: center; font-size: 2.3cqw; z-index: 6;
+                 background: linear-gradient(transparent, rgba(5,8,18,.7)); padding: 2.6cqw 0 1.1cqw;
                  text-shadow: 0 1px 5px rgba(0,0,0,.8); }
   .toolbar { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin: 14px 0 4px; }
   .promptbox { width: 100%; min-height: 108px; background: #12172a; color: #dbe7ff; border: 1px solid rgba(255,255,255,.2);
@@ -84,23 +103,23 @@
 <svg width="0" height="0" style="position:absolute">
   <defs>
     <filter id="fFX" x="-30%" y="-30%" width="160%" height="160%">
-      <feMorphology in="SourceAlpha" operator="dilate" radius="4" result="d"/>
+      <feMorphology in="SourceAlpha" operator="dilate" radius="3" result="d"/>
       <feFlood id="fFXflood" flood-color="#fbbf24"/><feComposite in2="d" operator="in"/>
     </filter>
     <filter id="fFXL" x="-30%" y="-30%" width="160%" height="160%">
-      <feMorphology in="SourceAlpha" operator="dilate" radius="8" result="d"/>
+      <feMorphology in="SourceAlpha" operator="dilate" radius="5.5" result="d"/>
       <feFlood id="fFXLflood" flood-color="#fbbf24"/><feComposite in2="d" operator="in"/>
     </filter>
     <filter id="fLin" x="-30%" y="-30%" width="160%" height="160%">
-      <feMorphology in="SourceAlpha" operator="dilate" radius="4" result="d"/>
+      <feMorphology in="SourceAlpha" operator="dilate" radius="3" result="d"/>
       <feFlood id="fLinflood" flood-color="#22d3ee"/><feComposite in2="d" operator="in"/>
     </filter>
     <filter id="fDark" x="-30%" y="-30%" width="160%" height="160%">
-      <feMorphology in="SourceAlpha" operator="dilate" radius="7" result="d"/>
+      <feMorphology in="SourceAlpha" operator="dilate" radius="5" result="d"/>
       <feFlood flood-color="#0a1428"/><feComposite in2="d" operator="in"/>
     </filter>
     <filter id="fWhite" x="-30%" y="-30%" width="160%" height="160%">
-      <feMorphology in="SourceAlpha" operator="dilate" radius="3" result="d"/>
+      <feMorphology in="SourceAlpha" operator="dilate" radius="2.2" result="d"/>
       <feFlood flood-color="#ffffff"/><feComposite in2="d" operator="in"/>
     </filter>
   </defs>
@@ -141,16 +160,14 @@
       <div class="card-header">FUSE FILE No. <span id="fileNo"></span></div>
       <div class="costtag" id="costTag"></div>
       <div class="card-main">
-        <div class="logo-zone">
-          <div class="faction" id="faction"></div>
-          <div class="logo-wrap" id="logoWrap"></div>
+        <div class="faction" id="faction"></div>
+        <div class="logo-wrap" id="logoWrap"></div>
+        <svg class="radar" id="radar" viewBox="0 0 300 300"></svg>
+        <div class="info-zone">
           <div class="chips" id="chips"></div>
           <div class="effect" id="effectText"></div>
         </div>
-        <div class="side-zone">
-          <svg class="radar" id="radar" viewBox="0 0 300 300"></svg>
-          <div class="panel" id="panel"></div>
-        </div>
+        <div class="panel" id="panel"></div>
       </div>
       <div class="card-footer">FUSE診断 〜あなただけの特殊能力〜　fuse.mikaspark.com　© Mika Spark Studio</div>
     </div>
@@ -350,20 +367,20 @@ function renderResult() {
     R.side === "hero" ? "この力は、誰かを守る場面で最も強く発現する。" : "この力は、自分の目的を貫く場面で最も強く発現する。";
   document.getElementById("effectText").textContent = R.core.effect + " " + usage;
   document.getElementById("panel").innerHTML =
-    "発動条件：" + R.trigger + "<br>代償：" + COSTS[R.lowest].text + "（" + R.costGrade + "）<br>" +
-    "覚醒タイプ：" + R.awakening + " ／ 覚醒度 " + R.pct + "%" +
-    (R.notes.length ? "<br>特記事項：" + R.notes.join("／") : "");
+    "条件：" + R.trigger + "<br>代償：" + COSTS[R.lowest].text + "（" + R.costGrade + "）<br>" +
+    "覚醒：" + R.awakening + "／" + R.pct + "%" +
+    (R.notes.length ? "<br>※" + R.notes.join("／") : "");
   buildRadar(R);
   buildPrompts();
 }
 
 function buildRadar(R) {
-  const svg = document.getElementById("radar"); const cx = 150, cy = 150, Rr = 62;
+  const svg = document.getElementById("radar"); const cx = 150, cy = 150, Rr = 55;
   const pt = (i, r) => { const a = (-90 + i * 60) * Math.PI / 180; return (cx + r * Math.cos(a)).toFixed(1) + "," + (cy + r * Math.sin(a)).toFixed(1); };
   let s = "";
-  [1, 0.66, 0.33].forEach(f => { s += '<polygon points="' + PARAMS.map((_, i) => pt(i, Rr * f)).join(" ") + '" fill="none" stroke="rgba(255,255,255,.45)" stroke-width="1"/>'; });
-  s += '<polygon points="' + PARAMS.map((p, i) => pt(i, Rr * R.v[p] / 100)).join(" ") + '" fill="' + LINEAGES[R.lineage].color + '70" stroke="' + LINEAGES[R.lineage].color + '" stroke-width="2"/>';
-  PARAMS.forEach((p, i) => { const a = (-90 + i * 60) * Math.PI / 180; const x = cx + (Rr + 20) * Math.cos(a), y = cy + (Rr + 20) * Math.sin(a);
+  [1, 0.66, 0.33].forEach(f => { s += '<polygon points="' + PARAMS.map((_, i) => pt(i, Rr * f)).join(" ") + '" fill="none" stroke="rgba(255,255,255,.45)" stroke-width="1.5"/>'; });
+  s += '<polygon points="' + PARAMS.map((p, i) => pt(i, Rr * R.v[p] / 100)).join(" ") + '" fill="' + LINEAGES[R.lineage].color + '70" stroke="' + LINEAGES[R.lineage].color + '" stroke-width="2.5"/>';
+  PARAMS.forEach((p, i) => { const a = (-90 + i * 60) * Math.PI / 180; const x = cx + (Rr + 36) * Math.cos(a), y = cy + (Rr + 36) * Math.sin(a);
     s += '<text x="' + x.toFixed(0) + '" y="' + y.toFixed(0) + '">' + PARAM_JA[p] + '</text>'; });
   svg.innerHTML = s;
 }
