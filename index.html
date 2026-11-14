@@ -221,9 +221,14 @@ function compute(answers) {
   const raw = {}, max = {};
   PARAMS.forEach(p => { raw[p] = 0; max[p] = 0; });
   QUESTIONS.forEach((q, qi) => {
-    q.options.forEach(op => {
-      if (op.m) max[op.m] += 6;
-      if (op.s) max[op.s] += 3;
+    // 正規化の分母は「各問でそのパラメータに得られる最大値」の合計（全選択肢の合計だと分布が圧縮されるため）
+    PARAMS.forEach(p => {
+      let qmax = 0;
+      q.options.forEach(op => {
+        const gain = op.m === p ? 6 : op.s === p ? 3 : 0;
+        if (gain > qmax) qmax = gain;
+      });
+      max[p] += qmax;
     });
     const op = q.options[answers[qi]];
     if (op.m) raw[op.m] += 6;
@@ -263,17 +268,22 @@ function buildResult(v, ori, fixed) {
     const inTop2 = p => p === top || p === second;
     if (H("PER") && H("DEP")) form = "予知型";
     else if (H("DRV") && Lw("CTL")) form = "速度型";
+    else if (H("DRV") && H("CTL")) form = "増幅型";
     else if (H("CTL") && H("DEP")) form = "改変型";
     else if (H("RES") && H("FLX")) form = "共有型";
     else if (Lw("FLX") && H("CTL")) form = "固定型";
     else if (Lw("DRV") && H("DEP")) form = "蓄積型";
     else if (Lw("DEP") && H("FLX")) form = "転移型";
+    else if (top === "DRV" && v.CTL >= 45) form = "増幅型";
+    else if (v[top] >= 80 && v[top] - v[second] >= 25) form = "増幅型";
     else if (v.PER <= 25 && v.RES <= 25) form = "遮断型";
-    else if (top === "PER" && inTop2("DEP")) form = "予知型";
+    else if (top === "PER" && (inTop2("DEP") || v.DEP >= 40)) form = "予知型";
     else if (top === "DRV" && v.CTL <= 40) form = "速度型";
-    else if (top === "RES" && inTop2("FLX")) form = "共有型";
+    else if (top === "RES" && (inTop2("FLX") || v.FLX >= 32)) form = "共有型";
+    else if (top === "FLX" && inTop2("RES")) form = "共有型";
     else if (top === "CTL" && inTop2("DEP")) form = "改変型";
-    else if (top === "DEP" && inTop2("PER")) form = "予知型";
+    else if (top === "DEP" && (inTop2("PER") || v.PER >= 40)) form = "予知型";
+    else if (top === "DEP" && v.DRV <= 35) form = "蓄積型";
     else form = { PER: "読解型", DRV: "増幅型", CTL: "変換型", RES: "回復型", FLX: "転移型", DEP: "読解型" }[top];
   }
   const core = CORES[lineage + "|" + form];
@@ -289,7 +299,7 @@ function buildResult(v, ori, fixed) {
   else awakening = (a - b >= 8) ? "尖型" : (b >= 50 ? "双極型" : "潜在型");
   const pct = Math.max(10, Math.min(99, 10 + (a - mn)));
   // 代償・発動条件・特記事項
-  const costGrade = v[lowest] <= 15 ? "重い" : v[lowest] <= 32 ? "中" : "軽い";
+  const costGrade = v[lowest] <= 8 ? "重い" : v[lowest] <= 18 ? "中" : "軽い";
   const trigger = TRIGGERS[top][zoneIdx(v[top])];
   const notes = INTERACTIONS.filter(r => r.if(v)).slice(0, 2).map(r => r.text);
   const digits = PARAMS.map(p => Math.min(9, Math.floor(v[p] / 10))).join("");
